@@ -1,0 +1,15 @@
+$TTL    604800
+@   IN  SOA ns1.lab.local. admin.lab.local. (
+            2026070101
+            3600
+            1800
+            604800
+            86400 )
+
+@   IN  NS  ns1.lab.local.
+
+; PTR Records (IP → nome)
+1   IN  PTR vm1.lab.local.
+2   IN  PTR vm2.lab.local.
+3   IN  PTR vm3.lab.local.
+

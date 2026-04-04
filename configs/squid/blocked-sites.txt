@@ -1,0 +1,4 @@
+.facebook.com
+.tiktok.com
+.youtube.com
+.neverssl.com
