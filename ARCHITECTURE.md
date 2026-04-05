@@ -14,25 +14,25 @@ cada um com função específica, comunicando-se via rede interna isolada.
 ```
 ╔══════════════════════════════════════════════════════════════════╗
 ║                     HOST — Fedora Linux                          ║
-║                    VirtualBox 7.0                                ║
+║                    VirtualBox 7.2                                ║
 ╠══════════════════════════════════════════════════════════════════╣
-║                                                                   ║
+║                                                                  ║
 ║  ┌──────────────────────────────────────────────────────────┐    ║
 ║  │                  NAT Network (Internet)                  │    ║
 ║  │            10.0.2.0/24 (gerenciado pelo VirtualBox)      │    ║
 ║  └───────────────┬──────────────┬──────────────┬────────────┘    ║
-║                  │              │              │                  ║
-║         ┌────────┴──┐  ┌────────┴──┐  ┌───────┴───┐            ║
-║         │   VM1     │  │   VM2     │  │   VM3     │            ║
-║         │ enp0s3    │  │ enp0s3    │  │ enp0s3    │            ║
-║         │(NAT/DHCP) │  │(NAT/DHCP) │  │(NAT/DHCP) │            ║
-║         │           │  │           │  │           │            ║
-║         │ enp0s8    │  │ enp0s8    │  │ enp0s8    │            ║
-║         │192.168.10.1  │192.168.10.2  │192.168.10.3            ║
-║         └────────┬──┘  └────────┬──┘  └───────┬───┘            ║
-║                  │              │              │                  ║
+║                  │              │              │                 ║
+║         ┌────────┴──┐  ┌────────┴──┐  ┌───────┴───┐              ║
+║         │   VM1     │  │   VM2     │  │   VM3     │              ║
+║         │ enp0s3    │  │ enp0s3    │  │ enp0s3    │              ║
+║         │(NAT/DHCP) │  │(NAT/DHCP) │  │(NAT/DHCP) │              ║
+║         │           │  │           │  │           │              ║
+║         │ enp0s8    │  │ enp0s8    │  │ enp0s8    │              ║
+║         │192.168.10.1  │192.168.10.2  │192.168.10.3              ║
+║         └────────┬──┘  └────────┬──┘  └───────┬───┘              ║
+║                  │              │              │                 ║
 ║  ┌───────────────┴──────────────┴──────────────┴────────────┐    ║
-║  │              Rede Interna Privada (intnet)                │    ║
+║  │              Rede Interna Privada (intnet)               │    ║
 ║  │                   192.168.10.0/24                        │    ║
 ║  └──────────────────────────────────────────────────────────┘    ║
 ╚══════════════════════════════════════════════════════════════════╝
@@ -50,7 +50,7 @@ cada um com função específica, comunicando-se via rede interna isolada.
 |---|---|---|
 | **Bind9** | DNS autoritativo para `lab.local` + recursivo | 53/UDP,TCP |
 | **isc-dhcp-server** | Distribui IPs na faixa `192.168.10.100-200` | 67-68/UDP |
-| **SSH** | Acesso remoto seguro com chave Ed25519 | 2222/TCP |
+| **SSH** | Acesso remoto seguro com chave Ed25519 | 22/TCP |
 | **Samba** | Compartilhamento de arquivos (SMB/CIFS) | 445/TCP |
 | **iptables** | Firewall + NAT para saída à internet | — |
 
@@ -131,7 +131,7 @@ Autenticação → Verificação de permissões → Acesso ao share
 |---|---|---|---|
 | VM1 | 192.168.10.1 | DNS | 53 |
 | VM1 | 192.168.10.1 | DHCP | 67/68 |
-| VM1 | 192.168.10.1 | SSH | 2222 |
+| VM1 | 192.168.10.1 | SSH | 22 |
 | VM1 | 192.168.10.1 | Samba | 445 |
 | VM1 | 192.168.10.1 | Gateway/NAT | — |
 | VM2 | 192.168.10.2 | HTTP (Apache) | 80 |
@@ -160,10 +160,11 @@ Autenticação → Verificação de permissões → Acesso ao share
 - Licença GPL mais permissiva
 - Compatível 100% com MySQL
 
-### Por que porta 2222 no SSH?
-- Evitar bots automatizados que varrem a porta 22
-- Boa prática de hardening mesmo em ambientes de lab
-- Demonstra consciência de segurança para recrutadores
+### Por que usar autenticação por chave no SSH?
+- Maior segurança ao eliminar login por senha
+- Reduz risco de ataques de força bruta
+- Prática comum em ambientes corporativos
+- Uso de chave Ed25519 por ser mais moderna e segura
 
 ---
 

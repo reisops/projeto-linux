@@ -478,7 +478,7 @@ sudo nano /etc/ssh/sshd_config
 
 Altere ou confirme estas linhas:
 ```
-Port 2222                        # Porta não padrão
+Port 22                        # Porta padrão (22)
 PermitRootLogin no               # Sem login root
 PasswordAuthentication no        # Apenas chaves
 PubkeyAuthentication yes         # Habilita chaves
@@ -498,7 +498,7 @@ sudo systemctl restart ssh
 ### 8.5 — Testar (do host Fedora)
 
 ```bash
-ssh -i ~/.ssh/lab_key -p 2222 admin@192.168.10.1
+ssh -i ~/.ssh/lab_key admin@192.168.10.1
 ```
 
 ---
@@ -633,7 +633,7 @@ iptables -A INPUT -i lo -j ACCEPT
 iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 # SSH (porta customizada)
-iptables -A INPUT -p tcp --dport 2222 -j ACCEPT
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 
 # DNS
 iptables -A INPUT -p udp --dport 53 -j ACCEPT
@@ -922,7 +922,7 @@ dig @192.168.10.1 -x 192.168.10.2
 cat /var/lib/dhcp/dhcpd.leases
 
 # SSH
-ssh -i ~/.ssh/lab_key -p 2222 admin@192.168.10.1
+ssh -i ~/.ssh/lab_key admin@192.168.10.1
 
 # Samba
 smbclient //192.168.10.1/publico -N
