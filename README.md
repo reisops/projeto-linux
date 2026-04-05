@@ -40,7 +40,7 @@ Este projeto simula uma infraestrutura de rede corporativa real usando máquinas
      │ • DNS (Bind9) │ │ • Apache  │ │ • Squid Proxy  │
      │ • DHCP        │ │ • WordPress│ │ • Monitoramento│
      │ • Firewall    │ │ • MariaDB │ │                │
-     │ • SSH         │ │ • Nginx   │ │                │
+     │ • SSH         │ │           │ │                │
      │ • Samba       │ │           │ │                │
      └───────────────┘ └───────────┘ └────────────────┘
               │                 │              │
@@ -60,7 +60,7 @@ Este projeto simula uma infraestrutura de rede corporativa real usando máquinas
 | SSH | VM1 | 192.168.10.1 | 22 | ✅ |
 | Samba | VM1 | 192.168.10.1 | 445 | ✅ |
 | iptables Firewall | VM1 | 192.168.10.1 | — | ✅ |
-| Apache2 | VM2 | 192.168.10.2 | 80/443 | ✅ |
+| Apache2 | VM2 | 192.168.10.2 | 80 | ✅ |
 | WordPress | VM2 | 192.168.10.2 | 80 | ✅ |
 | MariaDB | VM2 | 192.168.10.2 | 3306 | ✅ |
 | Squid Proxy | VM3 | 192.168.10.3 | 3128 | ✅ |
