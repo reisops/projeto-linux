@@ -1,10 +1,15 @@
 # 🐧 Linux Infrastructure Lab — Portfolio Project
 
-> Infraestrutura completa de rede local com Ubuntu Server, implementando serviços essenciais de administração de sistemas Linux.
+> Infraestrutura completa de rede local com Ubuntu Server, simulando um ambiente corporativo real.
 
-![Ubuntu](https://img.shields.io/badge/Ubuntu_Server-24.04_LTS-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)
-![VirtualBox](https://img.shields.io/badge/VirtualBox-7.0-183A61?style=for-the-badge&logo=virtualbox&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-yellow?style=for-the-badge)
+![Ubuntu](https://img.shields.io/badge/Ubuntu_Server-24.04_LTS-E95420?style=for-the-badge\&logo=ubuntu\&logoColor=white)
+
+![VirtualBox](https://img.shields.io/badge/VirtualBox-7.2-183A61?style=for-the-badge\&logo=virtualbox\&logoColor=white)
+
+![Status](https://img.shields.io/badge/Status-Concluído-brightgreen?style=for-the-badge)
+
+---
+
 
 ---
 
