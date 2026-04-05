@@ -158,10 +158,11 @@ Execução do script de backup em todas as máquinas do ambiente, demonstrando p
 
 - Administração de servidores Linux (Ubuntu Server)
 - Configuração de serviços de rede (DNS, DHCP, Proxy)
-- Segurança de redes com iptables (NAT, port forwarding, firewall)
+- Segurança de redes (iptables, NAT, firewall)
 - Deploy de aplicações web (LAMP stack, WordPress)
 - Compartilhamento de arquivos cross-platform (Samba)
-- Scripting Bash para automação de tarefas
+- Troubleshooting de infraestrutura (rede, serviços, conectividade)
+- Automação com Bash scripting
 - Documentação técnica profissional
 - Versionamento com Git/GitHub
 
@@ -173,3 +174,7 @@ Execução do script de backup em todas as máquinas do ambiente, demonstrando p
 [LinkedIn](https://linkedin.com/in/luis-reis-ops) | [GitHub](https://github.com/reisops)
 
 ---
+
+## ⚠️ Disclaimer
+
+Consulte o arquivo [DISCLAIMER.md](./DISCLAIMER.md) para detalhes sobre o ambiente e limitações.
