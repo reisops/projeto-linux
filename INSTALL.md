@@ -64,7 +64,7 @@ sudo rpm --import https://www.virtualbox.org/download/oracle_vbox.asc
 ### 1.5 — Instalar VirtualBox
 
 ```bash
-sudo dnf install -y VirtualBox-7.0
+sudo dnf install -y VirtualBox
 ```
 
 ### 1.6 — Adicionar usuário ao grupo vboxusers
@@ -96,7 +96,7 @@ vboxdrv.sh: Building VirtualBox kernel modules.
 reboot
 # Após reiniciar:
 virtualbox --version
-# Saída esperada: 7.0.x
+# Saída esperada: 7.x.x (ou superior)
 ```
 
 ---
