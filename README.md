@@ -8,6 +8,9 @@
 
 ![Status](https://img.shields.io/badge/Status-Concluído-brightgreen?style=for-the-badge)
 
+> ⚠️ This project was originally documented in Portuguese (PT-BR).
+> As part of my transition to international standards, all new projects and documentation are being written in English.
+
 ---
 
 
