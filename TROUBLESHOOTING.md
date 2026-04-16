@@ -1,11 +1,13 @@
-# 🔧 TROUBLESHOOTING.md — Problemas Comuns e Soluções
+# 🔧 TROUBLESHOOTING.md — Common Issues and Solutions
+
+> This document is structured as a production runbook. Each entry follows the format: **Symptom → Diagnosis → Cause → Solution**.
 
 ---
 
-## Índice
+## Table of Contents
 
 1. [VirtualBox](#1-virtualbox)
-2. [Rede entre VMs](#2-rede-entre-vms)
+2. [Inter-VM Networking](#2-inter-vm-networking)
 3. [DNS (Bind9)](#3-dns-bind9)
 4. [DHCP](#4-dhcp)
 5. [SSH](#5-ssh)
@@ -19,47 +21,47 @@
 
 ## 1. VirtualBox
 
-### ❌ Erro: `vboxconfig` falha com "Secure Boot"
+### ❌ Error: `vboxconfig` fails with "Secure Boot"
 
-**Sintoma:**
+**Symptom:**
 ```
 modprobe: ERROR: could not insert 'vboxdrv': Operation not permitted
 ```
 
-**Causa:** Secure Boot impede módulos de kernel não assinados.
+**Cause:** Secure Boot prevents unsigned kernel modules from loading.
 
-**Solução A — Desabilitar Secure Boot (mais fácil):**
-1. Reinicie o computador
-2. Entre na BIOS/UEFI (geralmente Del, F2 ou F12)
-3. Encontre "Secure Boot" → Disable
-4. Salve e reinicie
+**Solution A — Disable Secure Boot (simplest):**
+1. Reboot the machine
+2. Enter BIOS/UEFI (usually Del, F2, or F12)
+3. Find "Secure Boot" → Disable
+4. Save and reboot
 
-**Solução B — Assinar o módulo (mantém Secure Boot ativo):**
+**Solution B — Sign the module (keeps Secure Boot active):**
 ```bash
-# Gerar chave de assinatura
+# Generate a signing key
 openssl req -new -x509 -newkey rsa:2048 -keyout MOK.priv \
   -outform DER -out MOK.der -days 36500 -subj "/CN=VirtualBox/"
 
-# Assinar o módulo
+# Sign the vboxdrv module
 sudo /usr/src/linux-headers-$(uname -r)/scripts/sign-file \
   sha256 MOK.priv MOK.der \
   $(modinfo -n vboxdrv)
 
-# Registrar a chave
+# Register the key with MOK manager
 sudo mokutil --import MOK.der
-# Digite uma senha temporária
+# Enter a temporary password when prompted
 
-# Reiniciar e aceitar a chave no gerenciador MOK
+# Reboot and accept the key in the MOK enrollment screen
 reboot
 ```
 
 ---
 
-### ❌ Erro: VMs não iniciam após atualização do kernel
+### ❌ VMs fail to start after a kernel update
 
-**Causa:** Os módulos do VirtualBox precisam ser recompilados para o novo kernel.
+**Cause:** VirtualBox kernel modules must be rebuilt for the new kernel version.
 
-**Solução:**
+**Solution:**
 ```bash
 sudo dnf install -y kernel-devel-$(uname -r) kernel-headers-$(uname -r)
 sudo /sbin/vboxconfig
@@ -67,71 +69,71 @@ sudo /sbin/vboxconfig
 
 ---
 
-## 2. Rede entre VMs
+## 2. Inter-VM Networking
 
-### ❌ VMs não se pingam pela rede interna
+### ❌ VMs cannot ping each other on the internal network
 
-**Diagnóstico:**
+**Diagnosis:**
 ```bash
-ip a                          # Verificar se enp0s8 tem IP
-ping 192.168.10.1             # Testar gateway
-ip route                      # Verificar rotas
+ip a                          # Check whether enp0s8 has an IP assigned
+ping 192.168.10.1             # Test gateway reachability
+ip route                      # Check routing table
 ```
 
-**Solução 1 — Interface não configurada:**
+**Solution 1 — Interface not configured:**
 ```bash
 sudo netplan apply
-# Se ainda falhar:
+# If it still fails:
 sudo ip link set enp0s8 up
 sudo ip addr add 192.168.10.X/24 dev enp0s8
 ```
 
-**Solução 2 — Nome da interface diferente:**
+**Solution 2 — Interface name differs from expected:**
 ```bash
 ip a
-# Anote o nome real da segunda interface (pode ser enp0s8, eth1, etc.)
-# Edite /etc/netplan/00-installer-config.yaml com o nome correto
+# Note the actual name of the second interface (may be enp0s8, eth1, etc.)
+# Update /etc/netplan/00-installer-config.yaml with the correct name
 sudo netplan apply
 ```
 
-**Solução 3 — Rede Interna com nomes diferentes no VirtualBox:**
-- Verifique se todas as VMs usam exatamente o mesmo nome em "Rede Interna"
-- No VirtualBox: Configurações → Rede → Adaptador 2 → Nome: `intnet`
-- O nome é case-sensitive!
+**Solution 3 — Internal network names don't match across VMs:**
+- Verify that all VMs use exactly the same name under "Internal Network"
+- In VirtualBox: Settings → Network → Adapter 2 → Name: `intnet`
+- The name is case-sensitive
 
 ---
 
-### ❌ VMs sem acesso à internet (NAT funcionando mas VM2/VM3 não navegam)
+### ❌ VM2 / VM3 have no internet access (NAT is active but outbound traffic fails)
 
-**Verificar na VM1:**
+**Check on VM1:**
 ```bash
-# ip_forward ativo?
+# Is ip_forward enabled?
 cat /proc/sys/net/ipv4/ip_forward
-# Deve retornar 1
+# Must return 1
 
-# Regra NAT existe?
+# Is the NAT rule present?
 sudo iptables -t nat -L POSTROUTING -n -v
-# Deve mostrar MASQUERADE para enp0s3
+# Must show MASQUERADE for enp0s3
 ```
 
-**Verificar nas VM2/VM3:**
+**Check on VM2 / VM3:**
 ```bash
-# Gateway apontando para VM1?
+# Is the default gateway pointing to VM1?
 ip route
-# Deve mostrar: default via 192.168.10.1
+# Expected: default via 192.168.10.1
 
-# DNS configurado?
+# Is DNS configured correctly?
 cat /etc/resolv.conf
-# Deve mostrar: nameserver 192.168.10.1
+# Expected: nameserver 192.168.10.1
 ```
 
 ---
 
 ## 3. DNS (Bind9)
 
-### ❌ bind9 falha ao iniciar
+### ❌ Bind9 fails to start
 
-**Diagnóstico:**
+**Diagnosis:**
 ```bash
 sudo systemctl status bind9
 sudo journalctl -u bind9 -n 50
@@ -139,47 +141,47 @@ sudo named-checkconf
 sudo named-checkzone lab.local /etc/bind/zones/db.lab.local
 ```
 
-**Erros comuns:**
+**Common errors:**
 
-| Erro | Causa | Solução |
+| Error | Cause | Solution |
 |---|---|---|
-| `zone lab.local/IN: loaded serial X` seguido de falha | Sintaxe no arquivo de zona | Verificar com `named-checkzone` |
-| `permission denied` | Permissões nos arquivos de zona | `sudo chown -R bind:bind /etc/bind/zones/` |
-| `address already in use` | Outro processo usando porta 53 | `sudo ss -tulpn \| grep 53` — identificar e parar |
+| Zone file fails to load | Syntax error in zone file | Run `named-checkzone` and fix reported line |
+| `permission denied` | Incorrect file ownership | `sudo chown -R bind:bind /etc/bind/zones/` |
+| `address already in use` | Port 53 already occupied | `sudo ss -tulpn \| grep 53` — identify and stop the conflicting process |
 
 ---
 
-### ❌ Resolução DNS não funciona nos clientes
+### ❌ DNS resolution fails on clients
 
-**Verificar do cliente:**
+**Test from the client:**
 ```bash
-dig @192.168.10.1 vm2.lab.local    # Consulta direta ao servidor
+dig @192.168.10.1 vm2.lab.local    # Direct query to the DNS server
 nslookup vm2.lab.local 192.168.10.1
 ```
 
-**Se funcionar com `@192.168.10.1` mas não sem:**
+**If it works with `@192.168.10.1` but not without:**
 ```bash
-# Verificar /etc/resolv.conf
+# Check resolv.conf
 cat /etc/resolv.conf
-# Deve ter: nameserver 192.168.10.1
+# Must contain: nameserver 192.168.10.1
 
-# No Ubuntu com systemd-resolved pode precisar de:
+# On Ubuntu with systemd-resolved:
 sudo nano /etc/systemd/resolved.conf
-# Adicionar: DNS=192.168.10.1
+# Add: DNS=192.168.10.1
 sudo systemctl restart systemd-resolved
 ```
 
 ---
 
-### ❌ Serial number desatualizado (zona não propaga)
+### ❌ Zone changes are not taking effect (stale serial number)
 
-Sempre que alterar um arquivo de zona, incremente o serial:
+Always increment the serial number after modifying a zone file:
 ```
-2026070101   →   2026070102   (mesmo dia, segunda alteração)
-2026070101   →   2026070201   (dia seguinte)
+2026070101   →   2026070102   (same day, second change)
+2026070101   →   2026070201   (next day)
 ```
 
-Depois:
+Then reload Bind9:
 ```bash
 sudo systemctl reload bind9
 ```
@@ -188,35 +190,34 @@ sudo systemctl reload bind9
 
 ## 4. DHCP
 
-### ❌ isc-dhcp-server falha ao iniciar
+### ❌ isc-dhcp-server fails to start
 
 ```bash
 sudo systemctl status isc-dhcp-server
 sudo journalctl -u isc-dhcp-server -n 30
 ```
 
-**Erro comum — interface não especificada:**
+**Common error — interface not specified:**
 ```bash
-# Verificar /etc/default/isc-dhcp-server
 cat /etc/default/isc-dhcp-server
-# INTERFACESv4 deve ter o nome correto da interface interna
+# INTERFACESv4 must contain the correct internal interface name
 ```
 
-**Erro — subnet não cobre a interface:**
+**Common error — subnet does not cover the interface IP:**
 ```bash
-# O IP da interface (192.168.10.1) deve estar dentro da subnet declarada (192.168.10.0/24)
-# Verifique o dhcpd.conf
+# The interface IP (192.168.10.1) must fall within the declared subnet (192.168.10.0/24)
+# Verify dhcpd.conf
 ```
 
 ---
 
-### ❌ Cliente não recebe IP do DHCP
+### ❌ Client does not receive an IP from DHCP
 
 ```bash
-# Na VM1, monitorar requisições em tempo real:
+# Monitor DHCP traffic in real time on VM1
 sudo tcpdump -i enp0s8 port 67 or port 68
 
-# Verificar leases ativos:
+# Check current leases
 cat /var/lib/dhcp/dhcpd.leases
 ```
 
@@ -224,17 +225,17 @@ cat /var/lib/dhcp/dhcpd.leases
 
 ## 5. SSH
 
-### ❌ Conexão SSH recusada
+### ❌ SSH connection refused
 
 ```bash
-# Verificar se o serviço está rodando
+# Check whether the service is running
 sudo systemctl status ssh
 
-# Verificar a porta
+# Check which port SSH is listening on
 sudo ss -tlpn | grep ssh
 
-# Testar conexão com verbose
-ssh -v -i ~/.ssh/lab_key -p 2222 admin@192.168.10.1
+# Test with verbose output
+ssh -v -i ~/.ssh/lab_key -p 22 admin@192.168.10.1
 ```
 
 ---
@@ -242,11 +243,11 @@ ssh -v -i ~/.ssh/lab_key -p 2222 admin@192.168.10.1
 ### ❌ "Permission denied (publickey)"
 
 ```bash
-# Verificar permissões do arquivo de chave no cliente
+# Fix permissions on the client side
 chmod 600 ~/.ssh/lab_key
 chmod 700 ~/.ssh/
 
-# Verificar authorized_keys no servidor
+# Verify authorized_keys on the server
 cat ~/.ssh/authorized_keys
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/authorized_keys
@@ -256,41 +257,42 @@ chmod 600 ~/.ssh/authorized_keys
 
 ## 6. Samba
 
-### ❌ Samba não aparece na rede
+### ❌ Samba shares not visible on the network
 
 ```bash
 sudo systemctl status smbd nmbd
 
-# Testar localmente
+# Test locally
 smbclient -L localhost -N
 
-# Verificar sintaxe do smb.conf
+# Validate smb.conf syntax
 testparm
 ```
 
 ---
 
-### ❌ "NT_STATUS_LOGON_FAILURE" ao conectar
+### ❌ "NT_STATUS_LOGON_FAILURE" when connecting
 
-**Causa:** Usuário não tem conta Samba ou senha Samba diferente da Linux.
+**Cause:** The user does not have a Samba account, or the Samba password differs from the Linux password.
 
 ```bash
-# Adicionar/atualizar senha Samba
+# Add or update the Samba password for the user
 sudo smbpasswd -a usuario
-sudo smbpasswd -e usuario   # ativar conta
+sudo smbpasswd -e usuario   # enable the account
 ```
 
 ---
 
-### ❌ Permissão negada ao gravar arquivos
+### ❌ Permission denied when writing to a share
 
 ```bash
-# Verificar permissões do diretório
+# Check share directory permissions
 ls -la /srv/samba/
 
-# Corrigir
+# Fix for public shares
 sudo chmod 777 /srv/samba/publico
-# ou para compartilhamentos autenticados:
+
+# Fix for authenticated shares
 sudo chown -R usuario:usuario /srv/samba/ti
 sudo chmod 770 /srv/samba/ti
 ```
@@ -299,37 +301,37 @@ sudo chmod 770 /srv/samba/ti
 
 ## 7. Apache / WordPress
 
-### ❌ Apache não inicia
+### ❌ Apache fails to start
 
 ```bash
 sudo systemctl status apache2
-sudo apache2ctl configtest   # Verificar sintaxe
+sudo apache2ctl configtest   # Validate configuration syntax
 
-# Verificar logs
+# Check error log
 sudo tail -50 /var/log/apache2/error.log
 ```
 
-**Erro comum — porta em uso:**
+**Common error — port 80 already in use:**
 ```bash
 sudo ss -tlpn | grep 80
-# Se ocupado: sudo systemctl stop nginx (se instalado)
+# If occupied: sudo systemctl stop nginx
 ```
 
 ---
 
-### ❌ WordPress mostra "Error establishing database connection"
+### ❌ WordPress shows "Error establishing a database connection"
 
 ```bash
-# Testar conexão manual
+# Test the database connection manually
 mysql -u wp_user -p wordpress_db
 
-# Verificar wp-config.php
+# Verify credentials in wp-config.php
 grep DB_ /var/www/wordpress/public_html/wp-config.php
 ```
 
 ---
 
-### ❌ WordPress com problema de permissão para upload
+### ❌ WordPress cannot upload files (permission error)
 
 ```bash
 sudo chown -R www-data:www-data /var/www/wordpress
@@ -348,10 +350,10 @@ sudo mariadb -u root -p
 ```
 
 ```sql
--- Verificar usuários existentes
+-- List existing users
 SELECT user, host FROM mysql.user;
 
--- Recriar usuário se necessário
+-- Recreate the user if necessary
 DROP USER IF EXISTS 'wp_user'@'localhost';
 CREATE USER 'wp_user'@'localhost' IDENTIFIED BY 'SenhaForte@2026';
 GRANT ALL PRIVILEGES ON wordpress_db.* TO 'wp_user'@'localhost';
@@ -362,41 +364,41 @@ FLUSH PRIVILEGES;
 
 ## 9. Squid Proxy
 
-### ❌ Squid não inicia
+### ❌ Squid fails to start
 
 ```bash
 sudo systemctl status squid
 sudo squid -k check
 
-# Inicializar diretórios de cache (obrigatório na primeira vez)
+# Initialize cache directories (required on first run)
 sudo squid -z
 sudo systemctl restart squid
 ```
 
 ---
 
-### ❌ "Access Denied" para todos os clientes
+### ❌ "Access Denied" for all clients
 
 ```bash
-# Verificar ACLs no squid.conf
+# Review ACL order in squid.conf
 sudo grep -n "http_access" /etc/squid/squid.conf
 
-# A regra "allow rede_local" deve vir ANTES de "deny all"
+# The "allow rede_local" rule MUST appear BEFORE "deny all"
 ```
 
 ---
 
-### ❌ Sites bloqueados não estão sendo bloqueados
+### ❌ Blocked sites are not being blocked
 
 ```bash
-# Verificar se o arquivo de bloqueio está sendo lido
+# Force Squid to reload its configuration
 sudo squid -k reconfigure
 
-# Testar do cliente com proxy configurado
+# Test from a client with the proxy configured
 curl -x http://192.168.10.3:3128 http://facebook.com
-# Deve retornar erro de acesso negado
+# Should return an access denied error
 
-# Ver log de acessos
+# Monitor the access log
 sudo tail -f /var/log/squid/access.log
 ```
 
@@ -404,47 +406,47 @@ sudo tail -f /var/log/squid/access.log
 
 ## 10. iptables
 
-### ❌ Regras não persistem após reboot
+### ❌ Rules do not persist after reboot
 
 ```bash
-# Salvar regras atuais
+# Save current rules
 sudo iptables-save > /etc/iptables/rules.v4
 
-# Verificar se iptables-persistent está instalado
+# Ensure iptables-persistent is installed
 sudo apt install -y iptables-persistent
 
-# Recarregar
+# Reload saved rules
 sudo netfilter-persistent reload
 ```
 
 ---
 
-### ❌ NAT não funciona (VM2/VM3 sem internet mesmo com regra)
+### ❌ NAT not working (VM2/VM3 cannot reach the internet despite the rule being present)
 
 ```bash
-# Verificar ip_forward
-cat /proc/sys/net/ipv4/ip_forward    # Deve ser 1
+# Check ip_forward
+cat /proc/sys/net/ipv4/ip_forward    # Must be 1
 
-# Se for 0:
+# Enable temporarily
 echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
 
-# Para permanente:
+# Make it permanent
 echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 ```
 
 ---
 
-### ❌ Ver todas as regras ativas
+### ❌ View all active rules
 
 ```bash
-# Tabela filter
+# Filter table
 sudo iptables -L -n -v --line-numbers
 
-# Tabela nat
+# NAT table
 sudo iptables -t nat -L -n -v
 
-# Limpar tudo (cuidado — perde acesso SSH se remoto!)
+# Flush all rules (caution — will drop SSH if connected remotely)
 sudo iptables -F
 sudo iptables -X
 sudo iptables -t nat -F
@@ -454,22 +456,22 @@ sudo iptables -P FORWARD ACCEPT
 
 ---
 
-## Comandos de Diagnóstico Rápido
+## Quick Diagnostic Reference
 
 ```bash
-# Status de todos os serviços
+# Check status of all services at once
 for srv in bind9 isc-dhcp-server ssh smbd apache2 mariadb squid; do
     echo "=== $srv ==="
     systemctl is-active $srv
 done
 
-# Verificar portas abertas
+# List all open ports and listening processes
 sudo ss -tulpn
 
-# Ver logs em tempo real
+# Follow system logs in real time
 sudo journalctl -f
 
-# Uso de recursos
+# Resource usage overview
 htop
 df -h
 free -h
