@@ -1,15 +1,21 @@
-# 🏗️ ARCHITECTURE.md — Arquitetura da Infraestrutura
+# 🏗️ ARCHITECTURE.md — Infrastructure Architecture
 
----
+-----
 
-## Visão Geral
+## Overview
 
-Este laboratório simula uma rede corporativa real com três servidores dedicados,
-cada um com função específica, comunicando-se via rede interna isolada.
+This lab simulates a real corporate network with three dedicated servers, each with a specific role, communicating over an isolated internal network.
 
----
+-----
 
-## Diagrama de Rede
+> 📘 Related Documentation:
+> - [INSTALL.md](./INSTALL.md) — Step-by-step setup guide
+> - [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) — Common issues and fixes
+> - [DISCLAIMER.md](./DISCLAIMER.md) — Scope and limitations
+
+----
+
+## Network Diagram
 
 ```
 ╔══════════════════════════════════════════════════════════════════╗
@@ -19,7 +25,7 @@ cada um com função específica, comunicando-se via rede interna isolada.
 ║                                                                  ║
 ║  ┌──────────────────────────────────────────────────────────┐    ║
 ║  │                  NAT Network (Internet)                  │    ║
-║  │            10.0.2.0/24 (gerenciado pelo VirtualBox)      │    ║
+║  │            10.0.2.0/24 (managed by VirtualBox)          │    ║
 ║  └───────────────┬──────────────┬──────────────┬────────────┘    ║
 ║                  │              │              │                 ║
 ║         ┌────────┴──┐  ┌────────┴──┐  ┌───────┴───┐              ║
@@ -32,180 +38,191 @@ cada um com função específica, comunicando-se via rede interna isolada.
 ║         └────────┬──┘  └────────┬──┘  └───────┬───┘              ║
 ║                  │              │              │                 ║
 ║  ┌───────────────┴──────────────┴──────────────┴────────────┐    ║
-║  │              Rede Interna Privada (intnet)               │    ║
-║  │                   192.168.10.0/24                        │    ║
+║  │               Private Internal Network (intnet)          │    ║
+║  │                      192.168.10.0/24                     │    ║
 ║  └──────────────────────────────────────────────────────────┘    ║
 ╚══════════════════════════════════════════════════════════════════╝
 ```
 
----
+-----
 
-## Componentes
+## Components
 
-### VM1 — Servidor Principal (`192.168.10.1`)
+### VM1 — Core Services (`192.168.10.1`)
 
-**Função:** Gateway, DNS, DHCP, Autenticação, Arquivos
+**Role:** Gateway, DNS, DHCP, Authentication, File Sharing
 
-| Serviço | Função | Porta |
-|---|---|---|
-| **Bind9** | DNS autoritativo para `lab.local` + recursivo | 53/UDP,TCP |
-| **isc-dhcp-server** | Distribui IPs na faixa `192.168.10.100-200` | 67-68/UDP |
-| **SSH** | Acesso remoto seguro com chave Ed25519 | 22/TCP |
-| **Samba** | Compartilhamento de arquivos (SMB/CIFS) | 445/TCP |
-| **iptables** | Firewall + NAT para saída à internet | — |
+|Service            |Function                                              |Port      |
+|-------------------|------------------------------------------------------|----------|
+|**Bind9**          |Authoritative DNS for `lab.local` + recursive resolver|53/UDP,TCP|
+|**isc-dhcp-server**|Assigns IPs in the range `192.168.10.100–200`         |67–68/UDP |
+|**SSH**            |Secure remote access using Ed25519 key authentication |22/TCP    |
+|**Samba**          |Cross-platform file sharing (SMB/CIFS)                |445/TCP   |
+|**iptables**       |Stateful firewall + NAT for outbound internet access  |—         |
 
-**Fluxo de inicialização:**
+**Boot sequence:**
+
 ```
 Boot → iptables (NAT) → bind9 → isc-dhcp-server → samba → ssh
 ```
 
----
+-----
 
-### VM2 — Servidor Web (`192.168.10.2`)
+### VM2 — Web Server (`192.168.10.2`)
 
-**Função:** Hospedagem web, banco de dados, CMS
+**Role:** Web hosting, database, CMS
 
-| Serviço | Função | Porta |
-|---|---|---|
-| **Apache2** | Servidor HTTP com múltiplos virtual hosts | 80/TCP |
-| **MariaDB** | Banco de dados relacional | 3306/TCP (local) |
-| **WordPress** | CMS instalado como LAMP stack | 80/TCP |
-| **PHP** | Linguagem de backend para WordPress | — |
+|Service      |Function                               |Port                 |
+|-------------|---------------------------------------|---------------------|
+|**Apache2**  |HTTP server with multiple virtual hosts|80/TCP               |
+|**MariaDB**  |Relational database server             |3306/TCP (local only)|
+|**WordPress**|CMS deployed on the LAMP stack         |80/TCP               |
+|**PHP**      |Server-side scripting for WordPress    |—                    |
 
-**Stack LAMP:**
+**LAMP stack:**
+
 ```
 Linux (Ubuntu) → Apache → MariaDB → PHP → WordPress
 ```
 
----
+-----
 
-### VM3 — Proxy/Segurança (`192.168.10.3`)
+### VM3 — Proxy / Security (`192.168.10.3`)
 
-**Função:** Proxy HTTP com cache e controle de acesso
+**Role:** HTTP proxy with caching and access control
 
-| Serviço | Função | Porta |
-|---|---|---|
-| **Squid** | Proxy HTTP com cache e filtragem de conteúdo | 3128/TCP |
+|Service  |Function                                     |Port    |
+|---------|---------------------------------------------|--------|
+|**Squid**|HTTP proxy with content filtering and caching|3128/TCP|
 
----
+-----
 
-## Fluxo de Comunicação
+## Communication Flows
 
-### Requisição DNS
+### DNS Query
+
 ```
-Cliente → [porta 53] → VM1 (Bind9)
-VM1 resolve internamente (lab.local) OU
-VM1 repassa para 8.8.8.8 (domínios externos)
-```
-
-### Requisição DHCP
-```
-Cliente (broadcast) → VM1 (isc-dhcp-server)
-VM1 responde com: IP, máscara, gateway, DNS
+Client → [port 53] → VM1 (Bind9)
+VM1 resolves internally (lab.local) OR
+VM1 forwards to 8.8.8.8 (external domains)
 ```
 
-### Navegação via Proxy
-```
-Cliente → [porta 3128] → VM3 (Squid) → Internet
-                    ↓
-            Verifica lista de bloqueios
-            Serve do cache se disponível
-```
+### DHCP Request
 
-### NAT / Saída para internet
 ```
-VM2 ou VM3 → [192.168.10.1] → VM1 (iptables MASQUERADE) → Internet
+Client (broadcast) → VM1 (isc-dhcp-server)
+VM1 responds with: IP address, subnet mask, gateway, DNS server
 ```
 
-### Acesso a arquivo compartilhado
+### Proxied Browsing
+
 ```
-Cliente Windows/Linux → [porta 445] → VM1 (Samba)
-Autenticação → Verificação de permissões → Acesso ao share
+Client → [port 3128] → VM3 (Squid) → Internet
+                           ↓
+                  Checks blocklist
+                  Serves from cache if available
 ```
 
----
+### NAT / Outbound Internet Access
 
-## Tabela de IPs e Serviços
+```
+VM2 or VM3 → [192.168.10.1] → VM1 (iptables MASQUERADE) → Internet
+```
 
-| Host | IP | Serviço | Porta |
-|---|---|---|---|
-| VM1 | 192.168.10.1 | DNS | 53 |
-| VM1 | 192.168.10.1 | DHCP | 67/68 |
-| VM1 | 192.168.10.1 | SSH | 22 |
-| VM1 | 192.168.10.1 | Samba | 445 |
-| VM1 | 192.168.10.1 | Gateway/NAT | — |
-| VM2 | 192.168.10.2 | HTTP (Apache) | 80 |
-| VM2 | 192.168.10.2 | MariaDB | 3306 (local) |
-| VM3 | 192.168.10.3 | Squid Proxy | 3128 |
-| — | 192.168.10.100-200 | Range DHCP | — |
+### File Share Access
 
----
+```
+Windows/Linux client → [port 445] → VM1 (Samba)
+Authentication → Permission check → Share access
+```
 
-## Decisões de Design
+-----
 
-### Por que Ubuntu Server em vez de Debian?
-- LTS de 5 anos com suporte ativo
-- Netplan como sistema de configuração de rede (mais moderno)
-- Comunidade maior e documentação mais abundante
-- Mais comum em ambientes corporativos reais
+## IP and Service Reference
 
-### Por que separar Web e Proxy em VMs diferentes?
-- Isolamento de segurança: comprometimento de uma VM não afeta a outra
-- Simula melhor uma arquitetura real de DMZ
-- Permite aplicar regras de firewall específicas entre as VMs
+|Host               |IP                |Service         |Port        |
+|-------------------|------------------|----------------|------------|
+|VM1 (Core Services)|192.168.10.1      |DNS             |53          |
+|VM1 (Core Services)|192.168.10.1      |DHCP            |67/68       |
+|VM1 (Core Services)|192.168.10.1      |SSH             |22          |
+|VM1 (Core Services)|192.168.10.1      |Samba           |445         |
+|VM1 (Core Services)|192.168.10.1      |Gateway / NAT   |—           |
+|VM2 (Web Server)   |192.168.10.2      |HTTP (Apache2)  |80          |
+|VM2 (Web Server)   |192.168.10.2      |MariaDB         |3306 (local)|
+|VM3 (Proxy)        |192.168.10.3      |Squid Proxy     |3128        |
+|—                  |192.168.10.100–200|DHCP lease range|—           |
 
-### Por que MariaDB em vez de MySQL?
-- Fork comunitário mantido pelos criadores originais do MySQL
-- Melhor desempenho em benchmarks gerais
-- Licença GPL mais permissiva
-- Compatível 100% com MySQL
+-----
 
-### Por que usar autenticação por chave no SSH?
-- Maior segurança ao eliminar login por senha
-- Reduz risco de ataques de força bruta
-- Prática comum em ambientes corporativos
-- Uso de chave Ed25519 por ser mais moderna e segura
+## Design Decisions
 
----
+### Why Ubuntu Server instead of Debian?
 
-## Estrutura de Diretórios dos Serviços
+- 5-year LTS with active security support
+- Netplan as the network configuration layer (more modern than `/etc/network/interfaces`)
+- Larger community and more abundant documentation
+- More widely deployed in real corporate environments
+
+### Why separate Web and Proxy into different VMs?
+
+- Security isolation: a compromised VM does not affect the others
+- More accurately reflects a real DMZ architecture
+- Enables VM-specific firewall rules between network segments
+
+### Why MariaDB instead of MySQL?
+
+- Community fork maintained by the original MySQL developers
+- Better benchmark performance in general workloads
+- More permissive GPL license
+- 100% compatible with MySQL
+
+### Why key-based SSH authentication?
+
+- Eliminates password-based login, removing a major attack surface
+- Reduces exposure to brute-force attacks
+- Standard practice in corporate and cloud environments
+- Ed25519 keys are used for their modern design and strong security properties
+
+-----
+
+## Service Directory Structure
 
 ```
 /
 ├── etc/
 │   ├── bind/
-│   │   ├── named.conf.options      # Opções globais DNS
-│   │   ├── named.conf.local        # Declaração de zonas
+│   │   ├── named.conf.options      # Global DNS options
+│   │   ├── named.conf.local        # Zone declarations
 │   │   └── zones/
-│   │       ├── db.lab.local        # Zona direta
-│   │       └── db.192.168.10       # Zona reversa
+│   │       ├── db.lab.local        # Forward zone
+│   │       └── db.192.168.10       # Reverse zone
 │   ├── dhcp/
-│   │   └── dhcpd.conf              # Config DHCP
+│   │   └── dhcpd.conf              # DHCP server configuration
 │   ├── samba/
-│   │   └── smb.conf                # Config Samba
+│   │   └── smb.conf                # Samba shares and global config
 │   ├── apache2/
 │   │   └── sites-available/
 │   │       ├── site1.conf
 │   │       └── wordpress.conf
 │   ├── squid/
-│   │   ├── squid.conf              # Config Squid
-│   │   └── blocked-sites.txt       # Blacklist
+│   │   ├── squid.conf              # Squid proxy configuration
+│   │   └── blocked-sites.txt       # Domain blocklist
 │   ├── iptables/
-│   │   ├── rules.sh                # Script de regras
-│   │   └── rules.v4                # Regras salvas
+│   │   ├── rules.sh                # Firewall rules script
+│   │   └── rules.v4                # Saved iptables rules
 │   └── ssh/
-│       └── sshd_config             # SSH hardened
+│       └── sshd_config             # Hardened SSH configuration
 ├── srv/
-│   └── samba/                      # Compartilhamentos
+│   └── samba/                      # Samba share directories
 │       ├── publico/
 │       ├── ti/
 │       ├── financeiro/
 │       └── lixeira/
 └── var/
-    ├── www/                        # Sites web
+    ├── www/                        # Web server document roots
     │   ├── site1/
     │   └── wordpress/
     └── lib/
         └── dhcp/
-            └── dhcpd.leases        # Leases DHCP ativos
+            └── dhcpd.leases        # Active DHCP leases
 ```
