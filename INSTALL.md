@@ -2,6 +2,15 @@
 
 > Follow this guide from zero: from VirtualBox setup through all services running and validated.
 
+---
+
+## 📎 Related Documentation
+
+- ⚠️ [Lab Disclaimer](./DISCLAIMER.md)
+- 🔧 [Troubleshooting Guide](./TROUBLESHOOTING.md)
+
+---
+
 ## ⚠️ Networking Note
 
 During development, Adapter 1 was temporarily switched from **NAT** to **Bridged** to resolve connectivity issues.
