@@ -1,30 +1,32 @@
-# ⚠️ DISCLAIMER — Ambiente de Laboratório
+⚠️ DISCLAIMER — Lab Environment
+Purpose
+This project was developed as a hands-on practical lab for Linux infrastructure and system administration. It simulates a real-world corporate network environment using virtual machines, with the goal of demonstrating applied technical skills — not theoretical knowledge.
+Scope
+The environment covers network service configuration (DNS, DHCP, proxy), web application deployment (LAMP stack, WordPress), file sharing (Samba), firewall management (iptables/NAT), and SSH hardening — all built and validated on a single physical host running Fedora Linux with VirtualBox.
+What This Project Represents
+This is not a "perfect setup." It is an honest record of an infrastructure built from scratch, including the failures encountered along the way. Real issues were diagnosed and resolved during development, including:
 
-Este projeto foi desenvolvido como laboratório prático de estudos em infraestrutura Linux.
+VirtualBox kernel module failures related to Secure Boot
+Interface naming inconsistencies between NAT and internal network adapters
+Manual interface adjustments required after Netplan mismatches
+Iterative troubleshooting across multiple service configurations before achieving a stable state
 
-Durante o processo, diversos problemas reais foram enfrentados e solucionados, incluindo:
-- Instabilidade com adaptadores de rede no VirtualBox
-- Diferenças de comportamento entre configurações NAT e rede interna
-- Ajustes manuais de interfaces e troubleshooting intensivo
-- Testes com múltiplas abordagens até atingir funcionamento estável
+Every problem encountered is documented in TROUBLESHOOTING.md. That documentation is part of the project — not an appendix.
+Reproducibility
+This environment was validated on the author's specific setup. Behavior may differ depending on:
 
-## Importante
+Host operating system and version
+VirtualBox version
+Physical hardware (particularly Secure Boot configuration)
+Network adapter naming on the guest OS
 
-Este ambiente:
-- Foi validado funcionalmente no meu setup
-- Pode exigir ajustes dependendo do ambiente (host, VirtualBox, rede, etc.)
-- Não garante execução 100% idêntica em todos os sistemas
+Steps and configurations are provided in full detail to maximize reproducibility, but manual adjustments may be necessary depending on your environment.
+Limitations
 
-## Objetivo
+All services run within a private virtual network (192.168.10.0/24) and are not exposed to the public internet
+This is a lab environment — it is not hardened for production deployment
+MariaDB is accessible only locally on VM2; external access is explicitly blocked at the firewall level
 
-O foco principal deste projeto é demonstrar:
-- Capacidade de troubleshooting
-- Conhecimento prático em infraestrutura
-- Implementação real de serviços de rede
 
-Mais do que um "setup perfeito", este projeto representa um cenário real de engenharia, onde problemas acontecem e são resolvidos.
-
----
-
-**Autor:** Luis Reis  
-**Data:** Abril/2026
+Author: Luis Reis
+Date: April 2026
